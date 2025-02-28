@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 import type {
   User,
@@ -72,7 +72,13 @@ export const useAppContext = () => {
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("currentUser");
+      return saved ? JSON.parse(saved) : null;
+    }
+    return null;
+  });
   const [users, setUsers] = useState<User[]>(mockUsers);
   const [betcodes, setBetcodes] = useState<Betcode[]>(mockBetcodes);
   const [messages, setMessages] = useState<{
@@ -86,18 +92,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   >(mockSubscriptionHistory);
   const [freePredictions, setFreePredictions] = useState(mockFreePredictions);
 
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem("currentUser", JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem("currentUser");
+    }
+  }, [currentUser]);
+
   const login = async (username: string, password: string) => {
     // Simulate login
     const user = mockUsers.find((u) => u.username === username);
-    if (user) {
-      setCurrentUser(user);
-    } else {
+    if (!user) {
       throw new Error("Invalid credentials");
     }
+
+    // Set the current user with all user data
+    setCurrentUser(user);
+
+    // For debugging
+    console.log("Logged in user:", user);
   };
 
   const logout = () => {
     setCurrentUser(null);
+    localStorage.removeItem("currentUser");
   };
 
   const subscribe = async (type: SubscriptionType, phoneNumber: string) => {

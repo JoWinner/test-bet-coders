@@ -12,6 +12,10 @@ export default function AdminDashboardPage() {
   const router = useRouter();
   const { currentUser, users, betcodes } = useAppContext();
 
+  // In the admin page:
+console.log("Current user in admin page:", currentUser);
+console.log("User role:", currentUser?.role);
+
   if (!currentUser || currentUser.role !== "admin") {
     router.push("/");
     return null;
